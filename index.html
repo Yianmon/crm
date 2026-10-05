@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yian 客户建档</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", Arial, sans-serif;
+    background: #f5f5f7;
+    color: #2b2b2b;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .header {
+    background: linear-gradient(135deg, #173f77 0%, #2563ab 100%);
+    color: #fff;
+    padding: 22px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.15);
+  }
+  .header h1 { font-size: 22px; font-weight: 700; letter-spacing: 1px; }
+  .header .sub { font-size: 12px; opacity: .85; margin-top: 2px; }
+  .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* 公司板块栏 */
+  .company-bar {
+    background: #fff;
+    padding: 10px 24px;
+    display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,.05);
+    border-bottom: 1px solid #ececf0;
+  }
+  .company-tab {
+    border: 1.5px solid #d9d9de; background: #f5f5f7; color: #555;
+    border-radius: 20px; padding: 6px 18px; font-size: 13.5px; cursor: pointer;
+    font-family: inherit; transition: all .15s; font-weight: 600;
+  }
+  .company-tab:hover { border-color: #2563ab; color: #2563ab; }
+  .company-tab.active { background: #2563ab; border-color: #2563ab; color: #fff; }
+  .company-tab .cnt { opacity: .75; font-weight: 400; font-size: 12px; margin-left: 4px; }
+  .company-add {
+    border: 1.5px dashed #b9d3ee; background: transparent; color: #2563ab;
+    border-radius: 20px; padding: 6px 14px; font-size: 13px; cursor: pointer; font-family: inherit;
+  }
+  .company-add:hover { background: #e9f2fc; }
+  .btn {
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: inherit;
+    transition: all .15s;
+  }
+  .btn-white { background: #fff; color: #2563ab; font-weight: 600; }
+  .btn-white:hover { background: #e9f2fc; }
+  .btn-red { background: #2563ab; color: #fff; font-weight: 600; }
+  .btn-red:hover { background: #173f77; }
+  .btn-outline { background: transparent; color: #2563ab; border: 1.5px solid #2563ab; }
+  .btn-outline:hover { background: #e9f2fc; }
+  .btn-gray { background: #e8e8ec; color: #444; }
+  .btn-gray:hover { background: #dcdce2; }
+  .btn-sm { padding: 4px 10px; font-size: 12px; border-radius: 4px; }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 20px 24px 60px; }
+
+  /* 统计条 */
+  .stats-bar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .stat-card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 14px 18px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    border-left: 4px solid #2563ab;
+  }
+  .stat-card .num { font-size: 26px; font-weight: 700; color: #2563ab; }
+  .stat-card .label { font-size: 12px; color: #777; }
+  .stat-card.warn { border-left-color: #e67e22; }
+  .stat-card.warn .num { color: #e67e22; }
+
+  /* 筛选区 */
+  .filter-bar {
+    background: #fff;
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .filter-bar input, .filter-bar select {
+    padding: 7px 10px;
+    border: 1.5px solid #d9d9de;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: inherit;
+    background: #fff;
+  }
+  .filter-bar input:focus, .filter-bar select:focus { outline: none; border-color: #2563ab; }
+  .filter-bar .search { flex: 1; min-width: 200px; }
+
+  /* 客户卡片 */
+  .customer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 14px;
+  }
+  .card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 16px 18px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    cursor: pointer;
+    transition: all .15s;
+    border: 1.5px solid transparent;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .card:hover { box-shadow: 0 4px 14px rgba(37,99,171,.18); transform: translateY(-2px); }
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .card-name { font-size: 16px; font-weight: 700; color: #2b2b2b; word-break: break-all; }
+  .card-country { font-size: 12px; color: #888; }
+  .card-products { display: flex; flex-wrap: wrap; gap: 5px; }
+  .tag {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: #e9f2fc;
+    color: #2563ab;
+    white-space: nowrap;
+  }
+  .card-biz {
+    font-size: 12.5px;
+    color: #666;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .card-bottom { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #999; border-top: 1px dashed #e8e8ec; padding-top: 8px; }
+
+  .grade {
+    font-weight: 800;
+    font-size: 15px;
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: #fff;
+  }
+  .grade-A { background: #c0392b; }
+  .grade-B { background: #e67e22; }
+  .grade-C { background: #f1c40f; color: #6b5900; }
+  .grade-D { background: #95a5a6; }
+
+  .due-badge { color: #e74c3c; font-weight: 600; }
+  .due-soon { color: #e67e22; font-weight: 600; }
+  .empty-tip { text-align: center; color: #aaa; padding: 60px 0; font-size: 14px; }
+
+  /* 弹窗 */
+  .modal-mask {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 100;
+    overflow-y: auto;
+    padding: 30px 16px;
+  }
+  .modal-mask.show { display: block; }
+  .modal {
+    background: #fff;
+    border-radius: 12px;
+    max-width: 780px;
+    margin: 0 auto;
+    box-shadow: 0 10px 40px rgba(0,0,0,.25);
+    overflow: hidden;
+  }
+  .modal-head {
+    background: #2563ab;
+    color: #fff;
+    padding: 14px 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .modal-head h2 { font-size: 17px; font-weight: 700; }
+  .close-x { background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; line-height: 1; }
+  .modal-body { padding: 22px; max-height: 75vh; overflow-y: auto; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-item { display: flex; flex-direction: column; gap: 5px; }
+  .form-item.full { grid-column: 1 / -1; }
+  .form-item label { font-size: 12.5px; font-weight: 600; color: #555; }
+  .form-item label .req { color: #e74c3c; }
+  .form-item input, .form-item select, .form-item textarea {
+    padding: 8px 10px;
+    border: 1.5px solid #d9d9de;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: inherit;
+  }
+  .form-item textarea { resize: vertical; min-height: 64px; }
+  .form-item input:focus, .form-item select:focus, .form-item textarea:focus { outline: none; border-color: #2563ab; }
+
+  .check-group { display: flex; flex-wrap: wrap; gap: 6px; }
+  .check-group label {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: #f5f5f7; border: 1.5px solid #e0e0e5;
+    border-radius: 16px; padding: 3px 10px;
+    font-size: 12px; font-weight: 400; color: #444;
+    cursor: pointer; transition: all .12s;
+  }
+  .check-group label:has(input:checked) { background: #e9f2fc; border-color: #2563ab; color: #2563ab; }
+  .check-group input { display: none; }
+
+  .grade-pick { display: flex; gap: 8px; flex-wrap: wrap; }
+  .grade-pick label {
+    flex: 1; min-width: 130px;
+    border: 2px solid #e0e0e5; border-radius: 8px;
+    padding: 8px 10px; cursor: pointer; text-align: center;
+    font-size: 12.5px; transition: all .12s;
+  }
+  .grade-pick input { display: none; }
+  .grade-pick .g-title { font-weight: 800; font-size: 15px; }
+  .grade-pick .g-desc { color: #888; font-size: 11px; }
+  .grade-pick label:has(input[value="A"]:checked) { border-color: #c0392b; background: #fdecea; }
+  .grade-pick label:has(input[value="B"]:checked) { border-color: #e67e22; background: #fdf1e3; }
+  .grade-pick label:has(input[value="C"]:checked) { border-color: #f1c40f; background: #fef9e0; }
+  .grade-pick label:has(input[value="D"]:checked) { border-color: #95a5a6; background: #f2f3f4; }
+
+  .modal-foot {
+    padding: 14px 22px;
+    border-top: 1px solid #eee;
+    display: flex; justify-content: flex-end; gap: 10px;
+    background: #fafafa;
+  }
+
+  /* 详情视图 */
+  .detail-info { display: grid; grid-template-columns: 110px 1fr; gap: 6px 12px; font-size: 13.5px; margin-bottom: 18px; }
+  .detail-info .k { color: #999; font-weight: 600; }
+  .detail-info .v { color: #333; word-break: break-all; }
+  .detail-info a { color: #2563ab; }
+
+  .section-title {
+    font-size: 15px; font-weight: 700; color: #2563ab;
+    border-left: 4px solid #2563ab; padding-left: 10px;
+    margin: 20px 0 12px;
+  }
+  .fu-form {
+    background: #fafafa; border: 1px solid #eee; border-radius: 8px;
+    padding: 14px; display: grid;
+    grid-template-columns: 130px 140px 1fr auto; gap: 8px; align-items: center;
+  }
+  .fu-form input, .fu-form select, .fu-form textarea {
+    padding: 7px 9px; border: 1.5px solid #d9d9de; border-radius: 6px;
+    font-size: 13px; font-family: inherit;
+  }
+  .fu-form textarea { resize: vertical; }
+  .fu-form input:focus, .fu-form select:focus, .fu-form textarea:focus { outline: none; border-color: #2563ab; }
+
+  .timeline { margin-top: 16px; }
+  .tl-item {
+    position: relative; padding: 0 0 16px 26px;
+    border-left: 2px solid #b9d3ee; margin-left: 8px;
+  }
+  .tl-item:last-child { border-left-color: transparent; padding-bottom: 0; }
+  .tl-item::before {
+    content: ""; position: absolute; left: -7px; top: 4px;
+    width: 12px; height: 12px; border-radius: 50%;
+    background: #2563ab; border: 2.5px solid #fff;
+    box-shadow: 0 0 0 2px #2563ab;
+  }
+  .tl-date { font-size: 12px; color: #999; font-weight: 600; }
+  .tl-type {
+    display: inline-block; font-size: 11px; font-weight: 600;
+    background: #e9f2fc; color: #2563ab;
+    border-radius: 4px; padding: 1px 7px; margin-left: 6px;
+  }
+  .tl-note { font-size: 13.5px; color: #333; margin-top: 3px; white-space: pre-wrap; }
+  .tl-del { position: absolute; right: 0; top: 2px; background: none; border: none; color: #ccc; cursor: pointer; font-size: 14px; }
+  .tl-del:hover { color: #e74c3c; }
+
+  .toast {
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+    background: #2b2b2b; color: #fff; padding: 10px 24px;
+    border-radius: 20px; font-size: 13px;
+    opacity: 0; pointer-events: none; transition: opacity .3s; z-index: 999;
+  }
+  .toast.show { opacity: .92; }
+
+  /* 云同步弹窗 */
+  .sync-note { font-size: 12.5px; color: #777; line-height: 1.8; }
+  .sync-steps {
+    background: #f5f7fa; border: 1px solid #e3e8ef; border-radius: 8px;
+    padding: 12px 16px 12px 14px; font-size: 12.5px; color: #555; margin: 12px 0; line-height: 1.8;
+  }
+  .sync-steps ol { padding-left: 20px; }
+  .sync-steps li { margin: 4px 0; }
+  .sync-kv { display: grid; grid-template-columns: 90px 1fr; gap: 8px 10px; font-size: 13.5px; margin: 6px 0 16px; }
+  .sync-kv .k { color: #999; font-weight: 600; }
+  .sync-kv .v { color: #333; word-break: break-all; }
+
+  @media (max-width: 640px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .fu-form { grid-template-columns: 1fr; }
+    .container { padding: 14px 12px 50px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>⚡ Yian 客户建档</h1>
+    <div class="sub">我的客户资产库 · 按就职公司分类 · 多设备云同步</div>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-white" onclick="openForm()">＋ 新建客户档案</button>
+    <button class="btn btn-outline" style="border-color:#fff;color:#fff;" id="syncBtn" onclick="cloudSync()">☁️ 云同步</button>
+    <button class="btn btn-outline" style="border-color:#fff;color:#fff;" onclick="exportExcel()">一键导出 Excel</button>
+    <button class="btn btn-outline" style="border-color:#fff;color:#fff;" onclick="exportJSON()">备份</button>
+    <button class="btn btn-outline" style="border-color:#fff;color:#fff;" onclick="document.getElementById('importFile').click()">导入备份</button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(this)">
+  </div>
+</div>
+
+<div class="company-bar" id="companyBar"></div>
+
+<div class="container">
+  <div class="stats-bar" id="statsBar"></div>
+  <div class="filter-bar">
+    <input class="search" id="fSearch" placeholder="🔍 搜索公司名 / 业务 / 备注…" oninput="render()">
+    <select id="fCountry" onchange="render()"><option value="">全部国家/地区</option></select>
+    <select id="fProduct" onchange="render()"><option value="">全部产品线</option></select>
+    <select id="fGrade" onchange="render()">
+      <option value="">全部等级</option>
+      <option value="A">A 级</option><option value="B">B 级</option>
+      <option value="C">C 级</option><option value="D">D 级</option>
+    </select>
+    <select id="fSort" onchange="render()">
+      <option value="updated">按最近跟进</option>
+      <option value="grade">按等级优先</option>
+      <option value="created">按建档时间</option>
+      <option value="name">按公司名称</option>
+    </select>
+  </div>
+  <div class="customer-grid" id="customerGrid"></div>
+  <div class="empty-tip" id="emptyTip" style="display:none;">还没有客户档案，点右上角「新建客户档案」开始录入</div>
+</div>
+
+<!-- 客户表单弹窗 -->
+<div class="modal-mask" id="formMask">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="formTitle">新建客户档案</h2>
+      <button class="close-x" onclick="closeForm()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-item">
+          <label>所属板块（就职公司）</label>
+          <select id="cCompany" onchange="onFormCompanyChange()"></select>
+        </div>
+        <div class="form-item">
+          <label>公司名称 <span class="req">*</span></label>
+          <input id="cName" placeholder="如 Motronics Ltda">
+        </div>
+        <div class="form-item">
+          <label>国家 / 地区 <span class="req">*</span></label>
+          <input id="cCountry" list="countryList" placeholder="选择或输入">
+          <datalist id="countryList">
+            <option>巴西</option><option>越南</option><option>泰国</option>
+            <option>印度尼西亚</option><option>菲律宾</option>
+            <option>哈萨克斯坦</option><option>乌兹别克斯坦</option>
+            <option>中东</option><option>非洲</option><option>韩国</option>
+            <option>其他</option>
+          </datalist>
+        </div>
+        <div class="form-item full">
+          <label>主营产品线（可多选）</label>
+          <div class="check-group" id="productChecks"></div>
+        </div>
+        <div class="form-item">
+          <label>公司官网</label>
+          <input id="cWebsite" placeholder="https://…">
+        </div>
+        <div class="form-item">
+          <label>来源渠道</label>
+          <select id="cSource">
+            <option>网易外贸通</option><option>海关数据</option><option>展会名片</option>
+            <option>LinkedIn</option><option>客户介绍</option><option>主动开发</option><option>其他</option>
+          </select>
+        </div>
+        <div class="form-item">
+          <label>联系人</label>
+          <input id="cContact" placeholder="姓名 / 职位">
+        </div>
+        <div class="form-item">
+          <label>邮箱 / WhatsApp</label>
+          <input id="cEmail" placeholder="email@example.com">
+        </div>
+        <div class="form-item full">
+          <label>业务范围 / 公司简介</label>
+          <textarea id="cBiz" placeholder="主营业务、代理品牌、规模等"></textarea>
+        </div>
+        <div class="form-item full">
+          <label>匹配度等级（与当前公司的合作价值）</label>
+          <div class="grade-pick">
+            <label><input type="radio" name="g" value="A" checked><div class="g-title" style="color:#c0392b">A 高度匹配</div><div class="g-desc">产品线高度重合 / 有正泰·德力西等同行合作背景 / 有明确采购需求</div></label>
+            <label><input type="radio" name="g" value="B"><div class="g-title" style="color:#e67e22">B 较匹配</div><div class="g-desc">行业相关、经销商/工程商，产品线部分重合</div></label>
+            <label><input type="radio" name="g" value="C"><div class="g-title" style="color:#b7950b">C 一般</div><div class="g-desc">业务沾边但需求不确定，需培育观察</div></label>
+            <label><input type="radio" name="g" value="D"><div class="g-title" style="color:#7f8c8d">D 待定</div><div class="g-desc">信息不足 / 匹配度低 / 暂缓跟进</div></label>
+          </div>
+        </div>
+        <div class="form-item">
+          <label>下次跟进日期</label>
+          <input id="cNext" type="date">
+        </div>
+        <div class="form-item">
+          <label>备注（认证、付款、特殊要求等）</label>
+          <input id="cNotes" placeholder="如：INMETRO 认证待确认">
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-gray" onclick="closeForm()">取消</button>
+      <button class="btn btn-red" id="saveBtn" onclick="saveCustomer()">保存档案</button>
+    </div>
+  </div>
+</div>
+
+<!-- 客户详情弹窗 -->
+<div class="modal-mask" id="detailMask">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="dTitle">客户详情</h2>
+      <button class="close-x" onclick="closeDetail()">✕</button>
+    </div>
+    <div class="modal-body" id="detailBody"></div>
+    <div class="modal-foot">
+      <button class="btn btn-gray" onclick="deleteCustomer()">删除档案</button>
+      <button class="btn btn-gray" onclick="editFromDetail()">编辑信息</button>
+      <button class="btn btn-red" onclick="closeDetail()">完成</button>
+    </div>
+  </div>
+</div>
+
+<!-- 云同步弹窗 -->
+<div class="modal-mask" id="syncMask">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-head">
+      <h2>☁️ 多设备云同步</h2>
+      <button class="close-x" onclick="closeSyncModal()">✕</button>
+    </div>
+    <div class="modal-body" id="syncBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ 产品线定义 ============ */
+const PRODUCTS = [
+  "MCB 微型断路器", "RCBO/RCCB 漏电保护", "MCCB 塑壳断路器", "SPD 浪涌保护",
+  "ATS 双电源", "配电箱/汇流排", "接触器 CJX2", "VFD 变频器",
+  "软启动器", "稳压器", "EV 交流桩", "EV 直流桩", "BESS 储能", "其他"
+];
+const FU_TYPES = ["首次发信", "邮件跟进", "客户回复", "报价", "寄样", "视频/会议", "展会见客", "订单成交", "其他"];
+const STORAGE_KEY = "yian_crm_v1";
+const LEGACY_KEY = "dc_customer_crm_v1";
+
+/* ============ 数据 ============ */
+let companies = [];      // 就职公司板块：[{id, name, products:[]}]
+let customers = [];      // 客户档案，每条含 companyId 归属
+let activeCompanyId = null;
+let editingId = null;
+let detailId = null;
+
+function defaultCompanies() {
+  return [{ id: "dc", name: "D&C Electric", products: [...PRODUCTS] }];
+}
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const data = JSON.parse(raw);
+      if (Array.isArray(data)) { // 兼容最早版本（纯客户数组，无板块）
+        companies = defaultCompanies();
+        customers = data.map(c => ({ companyId: "dc", ...c }));
+      } else {
+        companies = data.companies && data.companies.length ? data.companies : defaultCompanies();
+        customers = (data.customers || []).map(c => c.companyId ? c : { companyId: companies[0].id, ...c });
+        dataUpdatedAt = data.updatedAt || 0;
+      }
+    } else {
+      const legacy = localStorage.getItem(LEGACY_KEY);
+      if (legacy) { // 迁移旧版数据
+        companies = defaultCompanies();
+        customers = JSON.parse(legacy).map(c => ({ companyId: "dc", ...c }));
+      } else {
+        companies = defaultCompanies();
+        customers = [sampleMotronics()];
+      }
+    }
+  } catch (e) {
+    companies = defaultCompanies();
+    customers = [sampleMotronics()];
+  }
+  activeCompanyId = companies[0].id;
+  save(false);
+}
+function save(bump = true) {
+  if (bump && !suppressSync) {
+    dataUpdatedAt = Date.now();          // 本机数据有改动，刷新版本时间戳
+    scheduleSyncPush();                  // 自动排队上传云端（3 秒防抖）
+  }
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ companies, customers, updatedAt: dataUpdatedAt }));
+  } catch (e) {
+    toast("⚠️ 浏览器存储不可用（可能是无痕模式），数据没有被保存！");
+  }
+}
+
+function activeCompany() { return companies.find(x => x.id === activeCompanyId) || companies[0]; }
+function activeCustomers() { return customers.filter(c => c.companyId === activeCompanyId); }
+function companyName(id) { const co = companies.find(x => x.id === id); return co ? co.name : "—"; }
+
+function sampleMotronics() {
+  return {
+    id: "demo-1",
+    companyId: "dc",
+    name: "Motronics Ltda",
+    country: "巴西",
+    products: ["MCB 微型断路器", "接触器 CJX2", "VFD 变频器", "软启动器"],
+    website: "https://motronics.com.br/",
+    source: "主动开发",
+    contact: "Vitor Vertunes da Rocha（自动化销售工程师）",
+    email: "financeiro@motronics.com.br",
+    biz: "巴西本土工业自动化经销商（100% 本国企业），主营电机启动与驱动整体方案：从微型断路器（mini disjuntores）、电机保护断路器到变频器、软启动器（最大功率 500CV）。位于南里奥格兰德州 Caxias do Sul，2014 年成立，约 16 人，年营收约 100 万美元。",
+    grade: "A",
+    next: "",
+    notes: "与 MCB/CJX2/DC-D60 变频器/DC-Z60 软启动器产品线高度重合；巴西 INMETRO 认证未取得，需作为风险项推进",
+    createdAt: "2026-10-05",
+    followUps: [
+      { date: "2026-10-05", type: "首次发信", note: "第一次发信（介绍 D&C 公司基本情况 + 低压电气与工控产品线）" }
+    ]
+  };
+}
+
+/* ============ 渲染 ============ */
+function render() {
+  renderCompanyBar();
+  renderStats();
+  renderFilters();
+  renderGrid();
+}
+
+/* 公司板块栏 */
+function renderCompanyBar() {
+  document.getElementById("companyBar").innerHTML =
+    companies.map(co => {
+      const n = customers.filter(c => c.companyId === co.id).length;
+      return `<button class="company-tab${co.id === activeCompanyId ? " active" : ""}" onclick="switchCompany('${co.id}')">${esc(co.name)}<span class="cnt">${n}</span></button>`;
+    }).join("") +
+    `<button class="company-add" onclick="addCompany()">＋ 新增公司板块</button>`;
+}
+function switchCompany(id) { activeCompanyId = id; render(); }
+function addCompany() {
+  const name = prompt("请输入新公司板块名称（如：XX Electric）：");
+  if (!name || !name.trim()) return;
+  const co = { id: "co" + Date.now(), name: name.trim(), products: [...PRODUCTS] };
+  companies.push(co);
+  activeCompanyId = co.id;
+  save(); render();
+  toast("✅ 已新增「" + co.name + "」板块，之后新建的客户将录入该板块");
+}
+
+function renderStats() {
+  const list = activeCustomers();
+  const total = list.length;
+  const byGrade = g => list.filter(c => c.grade === g).length;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const due = list.filter(c => c.next && new Date(c.next + "T00:00") < today).length;
+  const soon = list.filter(c => {
+    if (!c.next) return false;
+    const d = new Date(c.next + "T00:00"), diff = (d - today) / 86400000;
+    return diff >= 0 && diff <= 3;
+  }).length;
+  document.getElementById("statsBar").innerHTML = `
+    <div class="stat-card"><div class="num">${total}</div><div class="label">客户总数 · ${esc(activeCompany().name)}</div></div>
+    <div class="stat-card"><div class="num">${byGrade("A")}</div><div class="label">A 级 · 高度匹配</div></div>
+    <div class="stat-card"><div class="num">${byGrade("B")}</div><div class="label">B 级 · 较匹配</div></div>
+    <div class="stat-card"><div class="num">${byGrade("C")}</div><div class="label">C 级 · 一般</div></div>
+    <div class="stat-card"><div class="num">${byGrade("D")}</div><div class="label">D 级 · 待定</div></div>
+    <div class="stat-card warn"><div class="num">${due}</div><div class="label">已逾期 · 需跟进</div></div>
+    <div class="stat-card warn"><div class="num">${soon}</div><div class="label">3 天内待跟进</div></div>`;
+}
+
+function renderFilters() {
+  const list = activeCustomers();
+  const coProds = (activeCompany().products || PRODUCTS);
+  const countries = [...new Set(list.map(c => c.country).filter(Boolean))].sort();
+  const selC = document.getElementById("fCountry"), curC = selC.value;
+  selC.innerHTML = '<option value="">全部国家/地区</option>' + countries.map(c => `<option${c === curC ? " selected" : ""}>${c}</option>`).join("");
+  const selP = document.getElementById("fProduct"), curP = selP.value;
+  selP.innerHTML = '<option value="">全部产品线</option>' + coProds.map(p => `<option${p === curP ? " selected" : ""}>${p}</option>`).join("");
+}
+
+function lastFollow(c) {
+  if (!c.followUps || !c.followUps.length) return null;
+  return c.followUps.slice().sort((a, b) => b.date.localeCompare(a.date))[0];
+}
+
+function renderGrid() {
+  const kw = document.getElementById("fSearch").value.trim().toLowerCase();
+  const fc = document.getElementById("fCountry").value;
+  const fp = document.getElementById("fProduct").value;
+  const fg = document.getElementById("fGrade").value;
+  const sort = document.getElementById("fSort").value;
+
+  let list = activeCustomers().filter(c => {
+    if (fc && c.country !== fc) return false;
+    if (fp && !(c.products || []).includes(fp)) return false;
+    if (fg && c.grade !== fg) return false;
+    if (kw) {
+      const hay = [c.name, c.biz, c.notes, c.contact, c.country, ...(c.products || [])].join(" ").toLowerCase();
+      if (!hay.includes(kw)) return false;
+    }
+    return true;
+  });
+
+  const gOrder = { A: 0, B: 1, C: 2, D: 3 };
+  list.sort((a, b) => {
+    if (sort === "grade") return (gOrder[a.grade] ?? 9) - (gOrder[b.grade] ?? 9);
+    if (sort === "created") return (b.createdAt || "").localeCompare(a.createdAt || "");
+    if (sort === "name") return (a.name || "").localeCompare(b.name || "");
+    const la = lastFollow(a)?.date || a.createdAt || "", lb = lastFollow(b)?.date || b.createdAt || "";
+    return lb.localeCompare(la);
+  });
+
+  const grid = document.getElementById("customerGrid");
+  const today = new Date(); today.setHours(0,0,0,0);
+  grid.innerHTML = list.map(c => {
+    const lf = lastFollow(c);
+    let dueHtml = "暂无跟进计划";
+    if (c.next) {
+      const d = new Date(c.next + "T00:00"), diff = Math.round((d - today) / 86400000);
+      if (diff < 0) dueHtml = `<span class="due-badge">⚠ 已逾期 ${-diff} 天</span>`;
+      else if (diff <= 3) dueHtml = `<span class="due-soon">${diff} 天后跟进</span>`;
+      else dueHtml = `下次跟进 ${c.next.slice(5)}`;
+    }
+    return `<div class="card" onclick="openDetail('${c.id}')">
+      <div class="card-top">
+        <div>
+          <div class="card-name">${esc(c.name)}</div>
+          <div class="card-country">📍 ${esc(c.country || "—")}${c.website ? ` · <a href="${esc(c.website)}" target="_blank" onclick="event.stopPropagation()" style="color:#2563ab">官网</a>` : ""}</div>
+        </div>
+        <span class="grade grade-${c.grade}">${c.grade}</span>
+      </div>
+      <div class="card-products">${(c.products || []).map(p => `<span class="tag">${esc(p)}</span>`).join("")}</div>
+      <div class="card-biz">${esc(c.biz || "")}</div>
+      <div class="card-bottom">
+        <span>${lf ? `最近跟进 ${lf.date.slice(5)} · ${esc(lf.type)}` : "未跟进"}</span>
+        <span>${dueHtml}</span>
+      </div>
+    </div>`;
+  }).join("");
+  document.getElementById("emptyTip").style.display = list.length ? "none" : "block";
+}
+
+function esc(s) {
+  return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+/* ============ 表单 ============ */
+function initProductChecks(products, selected = []) {
+  document.getElementById("productChecks").innerHTML = products.map(p =>
+    `<label><input type="checkbox" value="${p}"${selected.includes(p) ? " checked" : ""}>${p}</label>`).join("");
+}
+function onFormCompanyChange() {
+  const co = companies.find(x => x.id === document.getElementById("cCompany").value);
+  const selected = [...document.querySelectorAll("#productChecks input:checked")].map(i => i.value);
+  initProductChecks(co ? co.products : PRODUCTS, selected);
+}
+
+function openForm(c = null) {
+  editingId = c ? c.id : null;
+  document.getElementById("formTitle").textContent = c ? "编辑客户档案" : "新建客户档案";
+  document.getElementById("saveBtn").textContent = c ? "保存修改" : "保存档案";
+  const sel = document.getElementById("cCompany");
+  sel.innerHTML = companies.map(co => `<option value="${co.id}">${esc(co.name)}</option>`).join("");
+  sel.value = c?.companyId || activeCompanyId;
+  document.getElementById("cName").value = c?.name || "";
+  document.getElementById("cCountry").value = c?.country || "";
+  document.getElementById("cWebsite").value = c?.website || "";
+  document.getElementById("cSource").value = c?.source || "网易外贸通";
+  document.getElementById("cContact").value = c?.contact || "";
+  document.getElementById("cEmail").value = c?.email || "";
+  document.getElementById("cBiz").value = c?.biz || "";
+  document.getElementById("cNotes").value = c?.notes || "";
+  document.getElementById("cNext").value = c?.next || "";
+  const g = c?.grade || "A";
+  document.querySelector(`.grade-pick input[value="${g}"]`).checked = true;
+  const co = companies.find(x => x.id === sel.value);
+  initProductChecks(co ? co.products : PRODUCTS, c?.products || []);
+  document.getElementById("formMask").classList.add("show");
+}
+
+function closeForm() { document.getElementById("formMask").classList.remove("show"); editingId = null; }
+
+function saveCustomer() {
+  const name = document.getElementById("cName").value.trim();
+  const country = document.getElementById("cCountry").value.trim();
+  if (!name) { toast("请填写公司名称"); return; }
+  if (!country) { toast("请填写国家/地区"); return; }
+  const products = [...document.querySelectorAll("#productChecks input:checked")].map(i => i.value);
+  const data = {
+    companyId: document.getElementById("cCompany").value,
+    name, country, products,
+    website: document.getElementById("cWebsite").value.trim(),
+    source: document.getElementById("cSource").value,
+    contact: document.getElementById("cContact").value.trim(),
+    email: document.getElementById("cEmail").value.trim(),
+    biz: document.getElementById("cBiz").value.trim(),
+    notes: document.getElementById("cNotes").value.trim(),
+    next: document.getElementById("cNext").value,
+    grade: document.querySelector(".grade-pick input:checked").value
+  };
+  if (editingId) {
+    const c = customers.find(x => x.id === editingId);
+    Object.assign(c, data);
+    toast("档案已更新");
+  } else {
+    customers.push({ id: "c" + Date.now(), createdAt: todayStr(), followUps: [], ...data });
+    toast("✅ 已建档：" + name + "（归入「" + companyName(data.companyId) + "」板块）");
+  }
+  activeCompanyId = data.companyId; // 保存后自动切到该客户所在板块，立即可见
+  save(); closeForm(); render();
+}
+
+/* ============ 详情 ============ */
+function openDetail(id) {
+  detailId = id;
+  const c = customers.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById("dTitle").innerHTML =
+    `<span class="grade grade-${c.grade}" style="margin-right:8px;font-size:13px;width:24px;height:24px;border-radius:6px;">${c.grade}</span>${esc(c.name)}`;
+  const info = [
+    ["所属板块", esc(companyName(c.companyId))],
+    ["国家/地区", esc(c.country)],
+    ["官网", c.website ? `<a href="${esc(c.website)}" target="_blank">${esc(c.website)}</a>` : "—"],
+    ["主营产品线", (c.products || []).map(p => `<span class="tag">${esc(p)}</span>`).join(" ") || "—"],
+    ["业务范围", esc(c.biz || "—")],
+    ["联系人", esc(c.contact || "—")],
+    ["邮箱/WhatsApp", esc(c.email || "—")],
+    ["来源渠道", esc(c.source || "—")],
+    ["建档日期", esc(c.createdAt || "—")],
+    ["下次跟进", c.next ? esc(c.next) + (overdueText(c.next) ? ` <span class="due-badge">${overdueText(c.next)}</span>` : "") : "未设置"],
+    ["备注", esc(c.notes || "—")]
+  ].map(([k, v]) => `<div class="k">${k}</div><div class="v">${v}</div>`).join("");
+
+  const fus = (c.followUps || []).slice().sort((a, b) => b.date.localeCompare(a.date));
+  const tl = fus.length ? fus.map((f, i) => `
+    <div class="tl-item">
+      <button class="tl-del" title="删除该条记录" onclick="delFollow(${i})">✕</button>
+      <span class="tl-date">${esc(f.date)}</span><span class="tl-type">${esc(f.type)}</span>
+      <div class="tl-note">${esc(f.note || "")}</div>
+    </div>`).join("") : '<div style="color:#aaa;font-size:13px;padding:6px 0 2px;">还没有跟进记录</div>';
+
+  document.getElementById("detailBody").innerHTML = `
+    <div class="detail-info">${info}</div>
+    <div class="section-title">添加跟进记录</div>
+    <div class="fu-form">
+      <input type="date" id="fuDate" value="${todayStr()}">
+      <select id="fuType">${FU_TYPES.map(t => `<option>${t}</option>`).join("")}</select>
+      <textarea id="fuNote" rows="1" placeholder="如：第一次发信（介绍公司基本情况）"></textarea>
+      <button class="btn btn-red btn-sm" onclick="addFollow()">添加</button>
+    </div>
+    <div class="section-title">跟进时间线（${fus.length} 条）</div>
+    <div class="timeline">${tl}</div>`;
+  document.getElementById("detailMask").classList.add("show");
+}
+
+function overdueText(dateStr) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const d = new Date(dateStr + "T00:00"), diff = Math.round((today - d) / 86400000);
+  return diff > 0 ? `已逾期 ${diff} 天` : "";
+}
+
+function addFollow() {
+  const c = customers.find(x => x.id === detailId);
+  const date = document.getElementById("fuDate").value;
+  const type = document.getElementById("fuType").value;
+  const note = document.getElementById("fuNote").value.trim();
+  if (!date) { toast("请选择日期"); return; }
+  if (!note) { toast("请填写跟进内容"); return; }
+  c.followUps = c.followUps || [];
+  c.followUps.push({ date, type, note });
+  save(); openDetail(detailId); render();
+  toast("已添加跟进记录");
+}
+
+function delFollow(i) {
+  const c = customers.find(x => x.id === detailId);
+  if (!confirm("确定删除这条跟进记录吗？")) return;
+  c.followUps.splice(i, 1);
+  save(); openDetail(detailId); render();
+}
+
+function closeDetail() { document.getElementById("detailMask").classList.remove("show"); detailId = null; }
+
+function editFromDetail() {
+  const c = customers.find(x => x.id === detailId);
+  closeDetail(); openForm(c);
+}
+
+function deleteCustomer() {
+  const c = customers.find(x => x.id === detailId);
+  if (!confirm(`确定删除「${c.name}」的整份档案吗？跟进记录将一并删除，不可恢复。`)) return;
+  customers = customers.filter(x => x.id !== detailId);
+  save(); closeDetail(); render();
+  toast("档案已删除");
+}
+
+/* ============ 导入导出 ============ */
+/* --- 真·xlsx 导出（纯内置 zip + xml，离线可用）--- */
+const CRC_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); t[n] = c >>> 0; }
+  return t;
+})();
+function crc32(u8) {
+  let c = 0xFFFFFFFF;
+  for (let i = 0; i < u8.length; i++) c = CRC_TABLE[(c ^ u8[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+function makeZip(files) {
+  const enc = new TextEncoder();
+  const parts = [], central = [];
+  let offset = 0;
+  const DOS_DATE = 0x5D45; // 2026-10-05
+  for (const f of files) {
+    const nameB = enc.encode(f.name);
+    const crc = crc32(f.data);
+    const lh = new Uint8Array(30 + nameB.length);
+    const dv = new DataView(lh.buffer);
+    dv.setUint32(0, 0x04034b50, true); dv.setUint16(4, 20, true); dv.setUint16(6, 0x0800, true);
+    dv.setUint16(8, 0, true); dv.setUint16(10, 0, true); dv.setUint16(12, DOS_DATE, true);
+    dv.setUint32(14, crc, true); dv.setUint32(18, f.data.length, true); dv.setUint32(22, f.data.length, true);
+    dv.setUint16(26, nameB.length, true); dv.setUint16(28, 0, true);
+    lh.set(nameB, 30);
+    parts.push(lh, f.data);
+    const ch = new Uint8Array(46 + nameB.length);
+    const cv = new DataView(ch.buffer);
+    cv.setUint32(0, 0x02014b50, true); cv.setUint16(4, 20, true); cv.setUint16(6, 20, true);
+    cv.setUint16(8, 0x0800, true); cv.setUint16(10, 0, true); cv.setUint16(12, 0, true); cv.setUint16(14, DOS_DATE, true);
+    cv.setUint32(16, crc, true); cv.setUint32(20, f.data.length, true); cv.setUint32(24, f.data.length, true);
+    cv.setUint16(28, nameB.length, true); cv.setUint32(42, offset, true);
+    ch.set(nameB, 46);
+    central.push(ch);
+    offset += lh.length + f.data.length;
+  }
+  const cdSize = central.reduce((s, c) => s + c.length, 0);
+  const eocd = new Uint8Array(22);
+  const ev = new DataView(eocd.buffer);
+  ev.setUint32(0, 0x06054b50, true);
+  ev.setUint16(8, files.length, true); ev.setUint16(10, files.length, true);
+  ev.setUint32(12, cdSize, true); ev.setUint32(16, offset, true);
+  return new Blob([...parts, ...central, eocd], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+}
+function xmlEsc(s) {
+  return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "");
+}
+function colLetter(i) { let s = ""; i++; while (i > 0) { i--; s = String.fromCharCode(65 + (i % 26)) + s; i = Math.floor(i / 26); } return s; }
+function autoWidth(headers, rows) {
+  const len = s => { s = String(s ?? ""); let n = 0; for (const ch of s) n += ch.charCodeAt(0) > 255 ? 2 : 1; return n; };
+  return headers.map((h, i) => {
+    let w = len(h);
+    rows.forEach(r => { if (r[i] != null) w = Math.max(w, Math.min(len(r[i]), 50)); });
+    return Math.min(Math.max(w + 2, 8), 52);
+  });
+}
+function sheetXML(headers, rows) {
+  const cols = autoWidth(headers, rows).map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join("");
+  let xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n' +
+    '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+    '<sheetViews><sheetView><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>' +
+    `<cols>${cols}</cols><sheetData>` +
+    '<row r="1">' + headers.map((h, i) => `<c r="${colLetter(i)}1" s="1" t="inlineStr"><is><t xml:space="preserve">${xmlEsc(h)}</t></is></c>`).join("") + '</row>';
+  rows.forEach((row, ri) => {
+    xml += '<row r="' + (ri + 2) + '">' + row.map((v, i) =>
+      (v === "" || v == null) ? "" : `<c r="${colLetter(i)}${ri + 2}" t="inlineStr"><is><t xml:space="preserve">${xmlEsc(v)}</t></is></c>`).join("") + '</row>';
+  });
+  return xml + '</sheetData></worksheet>';
+}
+function exportExcel() {
+  const list = activeCustomers();
+  const co = activeCompany();
+  if (!list.length) { toast("「" + co.name + "」板块还没有客户档案"); return; }
+  const s1Head = ["公司名称", "国家/地区", "匹配等级", "主营产品线", "业务范围", "官网", "联系人", "邮箱/WhatsApp", "来源渠道", "建档日期", "下次跟进", "跟进次数", "最近跟进日期", "最近跟进内容", "备注"];
+  const s1Rows = list.map(c => {
+    const lf = lastFollow(c);
+    return [c.name, c.country, c.grade, (c.products || []).join(" / "), c.biz, c.website, c.contact, c.email,
+            c.source, c.createdAt, c.next, (c.followUps || []).length, lf?.date || "", lf ? `${lf.type}：${lf.note}` : "", c.notes];
+  });
+  const s2Head = ["公司名称", "国家/地区", "等级", "跟进日期", "类型", "内容"];
+  const s2Rows = [];
+  list.forEach(c => (c.followUps || []).forEach(f => s2Rows.push([c.name, c.country, c.grade, f.date, f.type, f.note])));
+  s2Rows.sort((a, b) => (b[3] || "").localeCompare(a[3] || ""));
+
+  const enc = new TextEncoder();
+  const files = [
+    { name: "[Content_Types].xml", data: enc.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>') },
+    { name: "_rels/.rels", data: enc.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>') },
+    { name: "xl/workbook.xml", data: enc.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="客户总表" sheetId="1" r:id="rId1"/><sheet name="跟进明细" sheetId="2" r:id="rId2"/></sheets></workbook>') },
+    { name: "xl/_rels/workbook.xml.rels", data: enc.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>') },
+    { name: "xl/styles.xml", data: enc.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Microsoft YaHei"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Microsoft YaHei"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF2563AB"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>') },
+    { name: "xl/worksheets/sheet1.xml", data: enc.encode(sheetXML(s1Head, s1Rows)) },
+    { name: "xl/worksheets/sheet2.xml", data: enc.encode(sheetXML(s2Head, s2Rows)) }
+  ];
+  const blob = makeZip(files);
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "Yian客户档案_" + co.name + "_" + todayStr() + ".xlsx";
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast("✅ 已导出「" + co.name + "」板块（客户总表 + 跟进明细）");
+}
+
+function exportJSON() {
+  downloadFile(JSON.stringify({ companies, customers }, null, 2), "Yian客户建档备份_" + todayStr() + ".json", "application/json");
+  toast("备份文件已下载（含全部公司板块），请妥善保存");
+}
+
+function importJSON(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      let impCompanies, impCustomers;
+      if (Array.isArray(data)) { // 兼容旧版纯客户数组备份
+        impCompanies = defaultCompanies();
+        impCustomers = data.map(c => ({ companyId: "dc", ...c }));
+      } else if (data && Array.isArray(data.customers)) {
+        impCompanies = data.companies && data.companies.length ? data.companies : defaultCompanies();
+        impCustomers = data.customers;
+      } else throw 0;
+      if (!confirm(`备份文件包含 ${impCompanies.length} 个公司板块、${impCustomers.length} 条客户档案。\n\n确定覆盖当前数据吗？（建议先点「备份」导出当前数据）`)) { input.value = ""; return; }
+      companies = impCompanies; customers = impCustomers;
+      activeCompanyId = companies[0].id;
+      save(); render();
+      toast("导入成功：" + companies.length + " 个板块 / " + customers.length + " 条档案");
+    } catch (err) { toast("文件格式不对，导入失败"); }
+    input.value = "";
+  };
+  reader.readAsText(file);
+}
+
+function downloadFile(content, filename, mime) {
+  const blob = new Blob([content], { type: mime });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+/* ============ 多设备云同步（GitHub 私密 Gist） ============ */
+const SYNC_TOKEN_KEY = "yian_sync_token";     // 授权码（每台设备各存一份）
+const SYNC_GIST_KEY  = "yian_sync_gist_id";   // 云端档案 ID
+const SYNC_LAST_KEY  = "yian_sync_last";      // 上次同步到的云端版本
+const SYNC_FILE = "yian-crm-data.json";
+
+let dataUpdatedAt = 0;        // 本机数据版本时间戳
+let lastSyncedRemote = 0;     // 上次同步时的云端版本时间戳
+let suppressSync = false;     // 拉取云端写入本地时，不再触发上传
+let syncBusy = false;
+let pushTimer = null;
+
+function syncToken() { return localStorage.getItem(SYNC_TOKEN_KEY) || ""; }
+
+async function gistAPI(method, path, body) {
+  const r = await fetch("https://api.github.com" + path, {
+    method,
+    headers: {
+      "Authorization": "Bearer " + syncToken(),
+      "Accept": "application/vnd.github+json",
+      "Content-Type": "application/json",
+      "X-GitHub-Api-Version": "2022-11-28"
+    },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  if (r.status === 401) throw new Error("授权码无效或已过期，请重新生成并粘贴");
+  if (!r.ok) throw new Error("GitHub " + r.status + "：" + (await r.text()).slice(0, 100));
+  return r.json();
+}
+function gistContent(g) {
+  return g && g.files && g.files[SYNC_FILE] ? (g.files[SYNC_FILE].content || null) : null;
+}
+function syncPayload() {
+  return { updatedAt: dataUpdatedAt, companies, customers };
+}
+
+/* 确保云端档案存在：优先找已建过的，找不到就新建 */
+async function ensureGist() {
+  const saved = localStorage.getItem(SYNC_GIST_KEY);
+  if (saved) return saved;
+  const gists = await gistAPI("GET", "/gists?per_page=100");
+  const found = gists.find(g => g.files && g.files[SYNC_FILE]);
+  if (found) {
+    localStorage.setItem(SYNC_GIST_KEY, found.id);
+    return found.id;
+  }
+  const created = await gistAPI("POST", "/gists", {
+    description: "Yian CRM Sync Data (do not delete)",
+    public: false,
+    files: { [SYNC_FILE]: { content: JSON.stringify(syncPayload()) } }
+  });
+  localStorage.setItem(SYNC_GIST_KEY, created.id);
+  lastSyncedRemote = dataUpdatedAt;
+  localStorage.setItem(SYNC_LAST_KEY, String(lastSyncedRemote));
+  return created.id;
+}
+
+/* 上传本机数据到云端 */
+async function cloudPush(silent) {
+  const id = await ensureGist();
+  await gistAPI("PATCH", "/gists/" + id, {
+    files: { [SYNC_FILE]: { content: JSON.stringify(syncPayload()) } }
+  });
+  lastSyncedRemote = dataUpdatedAt;
+  localStorage.setItem(SYNC_LAST_KEY, String(lastSyncedRemote));
+  if (!silent) toast("☁️ 已上传云端（" + customers.length + " 条档案）");
+}
+
+/* 用云端数据覆盖本机 */
+async function cloudPullApply(remote) {
+  companies = remote.companies && remote.companies.length ? remote.companies : defaultCompanies();
+  customers = (remote.customers || []).map(c => c.companyId ? c : { companyId: companies[0].id, ...c });
+  if (!companies.find(co => co.id === activeCompanyId)) activeCompanyId = companies[0].id;
+  suppressSync = true;
+  dataUpdatedAt = remote.updatedAt || 0;
+  save();
+  suppressSync = false;
+  lastSyncedRemote = dataUpdatedAt;
+  localStorage.setItem(SYNC_LAST_KEY, String(lastSyncedRemote));
+  render();
+  toast("☁️ 已从云端拉取：" + customers.length + " 条档案");
+}
+
+/* 手动/自动同步主入口 */
+async function cloudSync() {
+  if (!syncToken()) { openSyncModal(); return; }
+  if (syncBusy) { toast("⏳ 正在同步，请稍候…"); return; }
+  syncBusy = true; updateSyncBtn("busy");
+  try {
+    const g = await gistAPI("GET", "/gists/" + (await ensureGist()));
+    const content = gistContent(g);
+    if (!content) {                       // 云端还没初始化过
+      await cloudPush(false);
+    } else {
+      const remote = JSON.parse(content);
+      const rUpd = remote.updatedAt || 0;
+      if (rUpd === dataUpdatedAt) {
+        toast("✅ 本机与云端一致，无需同步");
+      } else if (rUpd > dataUpdatedAt && dataUpdatedAt > lastSyncedRemote) {
+        // 双边冲突：本机和云端都有各自的新改动
+        const useCloud = confirm("⚠️ 本机和云端都有新的改动，只能保留一份：\n\n【确定】= 用云端数据覆盖本机\n【取消】= 用本机数据覆盖云端\n\n（建议先用右上角「备份」导出一份再选）");
+        if (useCloud) await cloudPullApply(remote); else await cloudPush(false);
+      } else if (rUpd > dataUpdatedAt) {
+        await cloudPullApply(remote);
+      } else {
+        await cloudPush(false);
+      }
+    }
+    updateSyncBtn("ok");
+  } catch (e) {
+    updateSyncBtn("err");
+    toast("⚠️ 同步失败：" + e.message);
+    if (String(e.message).includes("授权码无效")) {
+      localStorage.removeItem(SYNC_TOKEN_KEY);
+      localStorage.removeItem(SYNC_GIST_KEY);
+      updateSyncBtn();
+    }
+  } finally {
+    syncBusy = false;
+    renderSyncModalIfOpen();
+  }
+}
+
+/* 打开页面时自动同步（静默，不弹冲突框） */
+async function syncOnLoad() {
+  if (!syncToken()) return;
+  updateSyncBtn("busy");
+  try {
+    const g = await gistAPI("GET", "/gists/" + (await ensureGist()));
+    const content = gistContent(g);
+    if (!content) { await cloudPush(true); updateSyncBtn("ok"); return; }
+    const remote = JSON.parse(content);
+    const rUpd = remote.updatedAt || 0;
+    if (rUpd > dataUpdatedAt) {
+      if (dataUpdatedAt > lastSyncedRemote) {
+        updateSyncBtn("conflict");
+        toast("⚠️ 本机与云端都有新改动，请点右上角「☁️ 云同步」手动处理");
+      } else {
+        await cloudPullApply(remote);
+        updateSyncBtn("ok");
+      }
+    } else if (rUpd < dataUpdatedAt) {
+      await cloudPush(true);
+      updateSyncBtn("ok");
+    } else {
+      updateSyncBtn("ok");
+    }
+  } catch (e) { updateSyncBtn("err"); }
+}
+
+/* 数据有改动后，延迟 3 秒自动上传（防抖） */
+function scheduleSyncPush() {
+  if (!syncToken() || suppressSync) return;
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(() => cloudPush(true).catch(() => updateSyncBtn("err")), 3000);
+}
+
+/* 顶栏按钮状态 */
+function updateSyncBtn(state) {
+  const b = document.getElementById("syncBtn");
+  if (!b) return;
+  if (!syncToken()) { b.textContent = "☁️ 云同步"; return; }
+  const map = { ok: "☁️ 云同步 ✓", busy: "☁️ 同步中…", err: "☁️ 同步异常", conflict: "☁️ 需手动同步" };
+  b.textContent = map[state] || "☁️ 云同步已开启";
+}
+
+/* 同步设置弹窗 */
+function openSyncModal() { renderSyncModal(); document.getElementById("syncMask").classList.add("show"); }
+function closeSyncModal() { document.getElementById("syncMask").classList.remove("show"); }
+function renderSyncModalIfOpen() {
+  const m = document.getElementById("syncMask");
+  if (m && m.classList.contains("show")) renderSyncModal();
+}
+function fmtSyncTime(ts) {
+  if (!ts) return "—";
+  return new Date(ts).toLocaleString("zh-CN", { hour12: false });
+}
+function renderSyncModal() {
+  const body = document.getElementById("syncBody");
+  if (!syncToken()) {
+    body.innerHTML = `
+      <div class="sync-note">开启后，你在<b>任何设备</b>（手机 / 电脑 / 任何浏览器）打开这个网页，客户数据都会<b>自动保持一致</b>——手机上录的客户，电脑上立刻能看到。数据同步到你自己的 GitHub 私密空间，只有持有授权码的设备能访问。</div>
+      <div class="sync-steps">
+        <b>获取授权码（只需一次，约 3 分钟）：</b>
+        <ol>
+          <li>打开 <a href="https://github.com/signup" target="_blank" style="color:#2563ab">github.com</a>，注册一个免费账号（邮箱即可）</li>
+          <li>登录后打开 <a href="https://github.com/settings/tokens/new?scopes=gist" target="_blank" style="color:#2563ab">GitHub 授权页面</a>（会自动勾选 gist 权限）</li>
+          <li>Note 随便填（如 yian）；Expiration 选 <b>No expiration</b>（永不过期）；确认 <b>gist</b> 已勾选</li>
+          <li>点底部绿色按钮 <b>Generate token</b>，复制 <b>ghp_</b> 开头的整串授权码（<b>只显示这一次</b>，务必先复制）</li>
+        </ol>
+      </div>
+      <div class="form-item">
+        <label>粘贴授权码（ghp_ 开头）</label>
+        <input id="syncTokenInput" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+      </div>
+      <button class="btn btn-red" style="width:100%;margin-top:14px;" onclick="enableSync()">开启云同步</button>
+      <div class="sync-note" style="margin-top:12px;">💡 授权码等同钥匙，<b>不要发给别人</b>。其他设备接入：打开本网页 → 右上角「☁️ 云同步」→ 粘贴同一个授权码。</div>`;
+  } else {
+    const gistId = localStorage.getItem(SYNC_GIST_KEY) || "";
+    const last = Number(localStorage.getItem(SYNC_LAST_KEY) || 0);
+    body.innerHTML = `
+      <div class="sync-kv">
+        <div class="k">状态</div><div class="v" style="color:#1e8e3e;font-weight:600;">✅ 云同步已开启</div>
+        <div class="k">云端档案号</div><div class="v">${gistId ? gistId.slice(0, 8) + "…" : "尚未生成"}</div>
+        <div class="k">当前数据</div><div class="v">${companies.length} 个公司板块 · ${customers.length} 条客户档案</div>
+        <div class="k">最近同步</div><div class="v">${fmtSyncTime(last)}</div>
+      </div>
+      <button class="btn btn-red" style="width:100%;" onclick="cloudSync()">立即同步</button>
+      <button class="btn btn-gray" style="width:100%;margin-top:10px;" onclick="disableSync()">断开云同步（本机不再自动同步）</button>
+      <div class="sync-note" style="margin-top:12px;">📌 其他设备接入方法：打开本网页 → 右上角「☁️ 云同步」→ 粘贴同一个授权码 → 自动拉取全部数据。</div>`;
+  }
+}
+async function enableSync() {
+  const tk = document.getElementById("syncTokenInput").value.trim();
+  if (!tk) { toast("请先粘贴授权码"); return; }
+  localStorage.setItem(SYNC_TOKEN_KEY, tk);
+  updateSyncBtn("busy");
+  await cloudSync();
+  renderSyncModalIfOpen();
+}
+function disableSync() {
+  if (!confirm("断开后，本机不再自动同步（云端数据和其他设备不受影响），确定？")) return;
+  localStorage.removeItem(SYNC_TOKEN_KEY);
+  localStorage.removeItem(SYNC_GIST_KEY);
+  localStorage.removeItem(SYNC_LAST_KEY);
+  updateSyncBtn(); renderSyncModal();
+  toast("已断开本机的云同步");
+}
+
+/* ============ 工具 ============ */
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+let toastTimer;
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+}
+
+/* 点击遮罩关闭 */
+document.getElementById("formMask").addEventListener("click", e => { if (e.target === e.currentTarget) closeForm(); });
+document.getElementById("detailMask").addEventListener("click", e => { if (e.target === e.currentTarget) closeDetail(); });
+document.getElementById("syncMask").addEventListener("click", e => { if (e.target === e.currentTarget) closeSyncModal(); });
+
+load(); render();
+lastSyncedRemote = Number(localStorage.getItem(SYNC_LAST_KEY) || 0);
+if (syncToken()) syncOnLoad(); else updateSyncBtn();
+</script>
+</body>
+</html>
