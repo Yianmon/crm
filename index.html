@@ -316,9 +316,73 @@
   .sync-kv .k { color: #999; font-weight: 600; }
   .sync-kv .v { color: #333; word-break: break-all; }
 
+  /* 视图切换 + 每日待办 */
+  .view-nav {
+    background: #fff; padding: 0 24px; display: flex; gap: 4px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.05); border-bottom: 1px solid #ececf0;
+  }
+  .view-tab {
+    border: none; background: transparent; padding: 12px 18px;
+    font-size: 14px; font-weight: 600; color: #888; cursor: pointer; font-family: inherit;
+    border-bottom: 2.5px solid transparent; transition: all .15s;
+  }
+  .view-tab:hover { color: #2563ab; }
+  .view-tab.active { color: #2563ab; border-bottom-color: #2563ab; }
+  .view-tab .badge {
+    display: inline-block; background: #e74c3c; color: #fff; border-radius: 9px;
+    font-size: 11px; padding: 0 6px; margin-left: 5px; font-weight: 400;
+  }
+
+  .todo-date-bar {
+    background: #fff; border-radius: 10px; padding: 12px 18px; margin-bottom: 14px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+  }
+  .todo-date-bar input[type="date"] {
+    padding: 7px 10px; border: 1.5px solid #d9d9de; border-radius: 6px;
+    font-size: 14px; font-family: inherit; color: #2563ab; font-weight: 600;
+  }
+  .todo-date-bar input[type="date"]:focus { outline: none; border-color: #2563ab; }
+  .todo-progress-wrap { flex: 1; min-width: 180px; }
+  .todo-progress { height: 8px; background: #e8e8ec; border-radius: 4px; overflow: hidden; }
+  .todo-progress i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #173f77, #2563ab); border-radius: 4px; transition: width .3s; }
+
+  .todo-add {
+    background: #fff; border-radius: 10px; padding: 12px 16px; margin-bottom: 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    display: grid; grid-template-columns: 1fr 220px auto; gap: 8px; align-items: center;
+  }
+  .todo-add input, .todo-add select {
+    padding: 9px 12px; border: 1.5px solid #d9d9de; border-radius: 6px;
+    font-size: 13.5px; font-family: inherit;
+  }
+  .todo-add input:focus, .todo-add select:focus { outline: none; border-color: #2563ab; }
+
+  .todo-item {
+    background: #fff; border-radius: 10px; padding: 12px 16px; margin-bottom: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .todo-item:hover { box-shadow: 0 3px 10px rgba(37,99,171,.14); }
+  .todo-check { width: 19px; height: 19px; accent-color: #2563ab; cursor: pointer; flex-shrink: 0; }
+  .todo-main { flex: 1; min-width: 0; }
+  .todo-text { font-size: 14px; color: #2b2b2b; word-break: break-all; }
+  .todo-done .todo-text { text-decoration: line-through; color: #aaa; }
+  .todo-cust {
+    display: inline-block; font-size: 11px; padding: 1px 8px; margin-top: 4px;
+    border-radius: 10px; background: #e9f2fc; color: #2563ab; cursor: pointer;
+  }
+  .todo-cust:hover { background: #2563ab; color: #fff; }
+  .todo-empty { background: #fff; border-radius: 10px; padding: 36px 0; text-align: center; color: #aaa; font-size: 13.5px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+  .todo-del { background: none; border: none; color: #ccc; cursor: pointer; font-size: 15px; flex-shrink: 0; padding: 2px 4px; }
+  .todo-del:hover { color: #e74c3c; }
+  .todo-overdue-date { font-size: 11px; color: #e74c3c; font-weight: 600; margin-right: 4px; }
+
   @media (max-width: 640px) {
     .form-grid { grid-template-columns: 1fr; }
     .fu-form { grid-template-columns: 1fr; }
+    .todo-add { grid-template-columns: 1fr; }
+    .view-nav { padding: 0 12px; }
     .container { padding: 14px 12px 50px; }
   }
 </style>
@@ -328,7 +392,7 @@
 <div class="header">
   <div>
     <h1>⚡ Yian 客户建档</h1>
-    <div class="sub">我的客户资产库 · 按就职公司分类 · 多设备云同步</div>
+    <div class="sub">我的客户资产库 · 每日待办 · 多设备云同步</div>
   </div>
   <div class="header-actions">
     <button class="btn btn-white" onclick="openForm()">＋ 新建客户档案</button>
@@ -340,6 +404,12 @@
   </div>
 </div>
 
+<div class="view-nav">
+  <button class="view-tab active" id="tabCustomers" onclick="switchView('customers')">🗂 客户档案</button>
+  <button class="view-tab" id="tabTodos" onclick="switchView('todos')">✅ 每日待办<span class="badge" id="todoBadge" style="display:none;"></span></button>
+</div>
+
+<div id="viewCustomers">
 <div class="company-bar" id="companyBar"></div>
 
 <div class="container">
@@ -362,6 +432,29 @@
   </div>
   <div class="customer-grid" id="customerGrid"></div>
   <div class="empty-tip" id="emptyTip" style="display:none;">还没有客户档案，点右上角「新建客户档案」开始录入</div>
+</div>
+</div>
+
+<!-- 每日待办视图 -->
+<div id="viewTodos" style="display:none;">
+  <div class="container">
+    <div class="todo-date-bar">
+      <button class="btn btn-gray btn-sm" onclick="todoShift(-1)">◀ 前一天</button>
+      <input type="date" id="todoDate" onchange="todoViewDate=this.value;renderTodos()">
+      <button class="btn btn-gray btn-sm" onclick="todoShift(1)">后一天 ▶</button>
+      <button class="btn btn-outline btn-sm" onclick="todoToday()">回到今天</button>
+      <div class="todo-progress-wrap">
+        <div style="font-size:12px;color:#777;margin-bottom:4px;"><span id="todoProgressText">今日 0/0 完成</span></div>
+        <div class="todo-progress"><i id="todoProgressBar" style="width:0%"></i></div>
+      </div>
+    </div>
+    <div class="todo-add">
+      <input id="todoText" placeholder="✍️ 添加待办，如：给 Seahorse 发跟进邮件（回车即可添加）" onkeydown="if(event.key==='Enter')addTodo()">
+      <select id="todoCustomer"></select>
+      <button class="btn btn-red" onclick="addTodo()">＋ 添加</button>
+    </div>
+    <div id="todoList"></div>
+  </div>
 </div>
 
 <!-- 客户表单弹窗 -->
@@ -488,6 +581,7 @@ const LEGACY_KEY = "dc_customer_crm_v1";
 /* ============ 数据 ============ */
 let companies = [];      // 就职公司板块：[{id, name, products:[]}]
 let customers = [];      // 客户档案，每条含 companyId 归属
+let todos = [];          // 每日待办：[{id, text, date, done, customerId, createdAt}]
 let activeCompanyId = null;
 let editingId = null;
 let detailId = null;
@@ -507,6 +601,7 @@ function load() {
       } else {
         companies = data.companies && data.companies.length ? data.companies : defaultCompanies();
         customers = (data.customers || []).map(c => c.companyId ? c : { companyId: companies[0].id, ...c });
+        todos = Array.isArray(data.todos) ? data.todos : [];
         dataUpdatedAt = data.updatedAt || 0;
       }
     } else {
@@ -532,7 +627,7 @@ function save(bump = true) {
     scheduleSyncPush();                  // 自动排队上传云端（3 秒防抖）
   }
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ companies, customers, updatedAt: dataUpdatedAt }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ companies, customers, todos, updatedAt: dataUpdatedAt }));
   } catch (e) {
     toast("⚠️ 浏览器存储不可用（可能是无痕模式），数据没有被保存！");
   }
@@ -945,8 +1040,8 @@ function exportExcel() {
 }
 
 function exportJSON() {
-  downloadFile(JSON.stringify({ companies, customers }, null, 2), "Yian客户建档备份_" + todayStr() + ".json", "application/json");
-  toast("备份文件已下载（含全部公司板块），请妥善保存");
+  downloadFile(JSON.stringify({ companies, customers, todos }, null, 2), "Yian客户建档备份_" + todayStr() + ".json", "application/json");
+  toast("备份文件已下载（含全部公司板块 + 待办清单），请妥善保存");
 }
 
 function importJSON(input) {
@@ -956,16 +1051,17 @@ function importJSON(input) {
   reader.onload = e => {
     try {
       const data = JSON.parse(e.target.result);
-      let impCompanies, impCustomers;
+      let impCompanies, impCustomers, impTodos = [];
       if (Array.isArray(data)) { // 兼容旧版纯客户数组备份
         impCompanies = defaultCompanies();
         impCustomers = data.map(c => ({ companyId: "dc", ...c }));
       } else if (data && Array.isArray(data.customers)) {
         impCompanies = data.companies && data.companies.length ? data.companies : defaultCompanies();
         impCustomers = data.customers;
+        impTodos = Array.isArray(data.todos) ? data.todos : [];
       } else throw 0;
-      if (!confirm(`备份文件包含 ${impCompanies.length} 个公司板块、${impCustomers.length} 条客户档案。\n\n确定覆盖当前数据吗？（建议先点「备份」导出当前数据）`)) { input.value = ""; return; }
-      companies = impCompanies; customers = impCustomers;
+      if (!confirm(`备份文件包含 ${impCompanies.length} 个公司板块、${impCustomers.length} 条客户档案、${impTodos.length} 条待办。\n\n确定覆盖当前数据吗？（建议先点「备份」导出当前数据）`)) { input.value = ""; return; }
+      companies = impCompanies; customers = impCustomers; todos = impTodos;
       activeCompanyId = companies[0].id;
       save(); render();
       toast("导入成功：" + companies.length + " 个板块 / " + customers.length + " 条档案");
@@ -1017,7 +1113,7 @@ function gistContent(g) {
   return g && g.files && g.files[SYNC_FILE] ? (g.files[SYNC_FILE].content || null) : null;
 }
 function syncPayload() {
-  return { updatedAt: dataUpdatedAt, companies, customers };
+  return { updatedAt: dataUpdatedAt, companies, customers, todos };
 }
 
 /* 确保云端档案存在：优先找已建过的，找不到就新建 */
@@ -1049,13 +1145,14 @@ async function cloudPush(silent) {
   });
   lastSyncedRemote = dataUpdatedAt;
   localStorage.setItem(SYNC_LAST_KEY, String(lastSyncedRemote));
-  if (!silent) toast("☁️ 已上传云端（" + customers.length + " 条档案）");
+  if (!silent) toast("☁️ 已上传云端（" + customers.length + " 条档案 / " + todos.length + " 条待办）");
 }
 
 /* 用云端数据覆盖本机 */
 async function cloudPullApply(remote) {
   companies = remote.companies && remote.companies.length ? remote.companies : defaultCompanies();
   customers = (remote.customers || []).map(c => c.companyId ? c : { companyId: companies[0].id, ...c });
+  todos = Array.isArray(remote.todos) ? remote.todos : [];
   if (!companies.find(co => co.id === activeCompanyId)) activeCompanyId = companies[0].id;
   suppressSync = true;
   dataUpdatedAt = remote.updatedAt || 0;
@@ -1064,7 +1161,8 @@ async function cloudPullApply(remote) {
   lastSyncedRemote = dataUpdatedAt;
   localStorage.setItem(SYNC_LAST_KEY, String(lastSyncedRemote));
   render();
-  toast("☁️ 已从云端拉取：" + customers.length + " 条档案");
+  renderTodos();
+  toast("☁️ 已从云端拉取：" + customers.length + " 条档案 / " + todos.length + " 条待办");
 }
 
 /* 手动/自动同步主入口 */
@@ -1213,6 +1311,117 @@ function disableSync() {
   toast("已断开本机的云同步");
 }
 
+/* ============ 每日待办 ============ */
+let todoViewDate = todayStr();
+
+function switchView(v) {
+  const c = v === "customers";
+  document.getElementById("viewCustomers").style.display = c ? "block" : "none";
+  document.getElementById("viewTodos").style.display = c ? "none" : "block";
+  document.getElementById("tabCustomers").classList.toggle("active", c);
+  document.getElementById("tabTodos").classList.toggle("active", !c);
+  if (!c) { todoViewDate = todayStr(); renderTodos(); }
+}
+
+function todoShift(n) {
+  const d = new Date(todoViewDate + "T00:00");
+  d.setDate(d.getDate() + n);
+  todoViewDate = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  renderTodos();
+}
+function todoToday() { todoViewDate = todayStr(); renderTodos(); }
+
+function renderTodos() {
+  document.getElementById("todoDate").value = todoViewDate;
+  const sel = document.getElementById("todoCustomer");
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">不关联客户</option>' +
+    customers.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join("");
+  if ([...sel.options].some(o => o.value === cur)) sel.value = cur;
+
+  const t = todayStr();
+  const overdue = todos.filter(x => !x.done && x.date < todoViewDate).sort((a, b) => a.date.localeCompare(b.date));
+  const active = todos.filter(x => !x.done && x.date === todoViewDate);
+  const done = todos.filter(x => x.done && x.date === todoViewDate);
+
+  const total = active.length + done.length;
+  document.getElementById("todoProgressText").textContent =
+    (todoViewDate === t ? "今日 " : todoViewDate.slice(5) + " ") + done.length + "/" + total + " 完成";
+  document.getElementById("todoProgressBar").style.width = total ? Math.round(done.length / total * 100) + "%" : "0%";
+
+  const todayCount = todos.filter(x => !x.done && x.date <= t).length;
+  const badge = document.getElementById("todoBadge");
+  badge.style.display = todayCount ? "inline-block" : "none";
+  badge.textContent = todayCount;
+
+  const custTag = cid => {
+    const c = customers.find(x => x.id === cid);
+    return c ? `<span class="todo-cust" title="查看客户详情" onclick="event.stopPropagation();openDetail('${c.id}')">📍 ${esc(c.name)}</span>` : "";
+  };
+  const item = (x, extra) => `
+    <div class="todo-item${x.done ? " todo-done" : ""}">
+      <input type="checkbox" class="todo-check" ${x.done ? "checked" : ""} onchange="toggleTodo('${x.id}')">
+      <div class="todo-main">
+        <div class="todo-text">${(!x.done && x.date < todoViewDate) ? `<span class="todo-overdue-date">原定 ${x.date.slice(5)}</span>` : ""}${esc(x.text)}</div>
+        ${x.customerId ? custTag(x.customerId) : ""}
+      </div>
+      ${extra || ""}
+      <button class="todo-del" title="删除" onclick="delTodo('${x.id}')">✕</button>
+    </div>`;
+
+  let html = "";
+  if (overdue.length) {
+    html += `<div class="section-title" style="color:#e74c3c;border-color:#e74c3c;">往日未完成（${overdue.length}）</div>` +
+      overdue.map(x => item(x,
+        `<button class="btn btn-outline btn-sm" onclick="carryTodo('${x.id}')">挪到${todoViewDate === t ? "今天" : todoViewDate.slice(5)}</button>`
+      )).join("");
+  }
+  html += `<div class="section-title">${todoViewDate === t ? "今日待办" : todoViewDate.slice(5) + " 待办"}（${active.length}）</div>`;
+  html += active.length ? active.map(x => item(x)).join("") :
+    '<div class="todo-empty">这一天没有待办，喝口咖啡 ☕</div>';
+  if (done.length) {
+    html += `<div class="section-title" style="color:#1e8e3e;border-color:#1e8e3e;">已完成（${done.length}）</div>` +
+      done.map(x => item(x)).join("");
+  }
+  document.getElementById("todoList").innerHTML = html;
+}
+
+function addTodo() {
+  const text = document.getElementById("todoText").value.trim();
+  if (!text) { toast("请填写待办内容"); return; }
+  const customerId = document.getElementById("todoCustomer").value || "";
+  todos.push({ id: "t" + Date.now(), text, date: todoViewDate, done: false, customerId, createdAt: todayStr() });
+  document.getElementById("todoText").value = "";
+  document.getElementById("todoCustomer").value = "";
+  save(); renderTodos();
+  toast("✅ 已添加到 " + (todoViewDate === todayStr() ? "今天" : todoViewDate));
+}
+
+function toggleTodo(id) {
+  const x = todos.find(t => t.id === id);
+  if (!x) return;
+  x.done = !x.done;
+  save(); renderTodos();
+  if (x.done) {
+    const left = todos.filter(t => !t.done && t.date <= todayStr()).length;
+    toast(left ? "完成一项，还剩 " + left + " 项 💪" : "全部搞定，今日清零 🎉");
+  }
+}
+
+function delTodo(id) {
+  if (!confirm("确定删除这条待办吗？")) return;
+  todos = todos.filter(t => t.id !== id);
+  save(); renderTodos();
+}
+
+function carryTodo(id) {
+  const x = todos.find(t => t.id === id);
+  if (!x) return;
+  x.date = todoViewDate;
+  save(); renderTodos();
+  toast("已顺延到 " + todoViewDate);
+}
+
 /* ============ 工具 ============ */
 function todayStr() {
   const d = new Date();
@@ -1231,7 +1440,7 @@ document.getElementById("formMask").addEventListener("click", e => { if (e.targe
 document.getElementById("detailMask").addEventListener("click", e => { if (e.target === e.currentTarget) closeDetail(); });
 document.getElementById("syncMask").addEventListener("click", e => { if (e.target === e.currentTarget) closeSyncModal(); });
 
-load(); render();
+load(); render(); renderTodos();
 lastSyncedRemote = Number(localStorage.getItem(SYNC_LAST_KEY) || 0);
 if (syncToken()) syncOnLoad(); else updateSyncBtn();
 </script>
