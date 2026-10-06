@@ -378,10 +378,45 @@
   .todo-del:hover { color: #e74c3c; }
   .todo-overdue-date { font-size: 11px; color: #e74c3c; font-weight: 600; margin-right: 4px; }
 
+  /* 工作注意事项 */
+  .note-bar {
+    background: #fff; border-radius: 10px; padding: 12px 16px; margin-bottom: 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  }
+  .note-bar input, .note-bar select {
+    padding: 9px 12px; border: 1.5px solid #d9d9de; border-radius: 6px;
+    font-size: 13.5px; font-family: inherit;
+  }
+  .note-bar input { flex: 1; min-width: 160px; }
+  .note-bar input:focus, .note-bar select:focus { outline: none; border-color: #2563ab; }
+  .note-card {
+    background: #fff; border-radius: 10px; padding: 14px 18px; margin-bottom: 10px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    border-left: 4px solid #b9d3ee;
+  }
+  .note-card.pinned { border-left-color: #f1c40f; background: #fffdf5; }
+  .note-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .note-title { font-size: 15px; font-weight: 700; color: #2b2b2b; word-break: break-all; }
+  .note-chip {
+    display: inline-block; font-size: 11px; padding: 1px 9px; border-radius: 10px;
+    background: #e9f2fc; color: #2563ab; font-weight: 600; margin-bottom: 6px;
+  }
+  .note-content { font-size: 13.5px; color: #444; white-space: pre-wrap; word-break: break-all; margin-top: 6px; }
+  .note-meta { font-size: 11px; color: #aaa; margin-top: 8px; }
+  .note-acts { display: flex; gap: 4px; flex-shrink: 0; }
+  .note-acts button {
+    background: none; border: none; cursor: pointer; font-size: 14px; color: #bbb; padding: 2px 5px;
+  }
+  .note-acts button:hover { color: #2563ab; }
+  .note-acts .pin-on { color: #f1a915; }
+  .note-empty { background: #fff; border-radius: 10px; padding: 36px 0; text-align: center; color: #aaa; font-size: 13.5px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+
   @media (max-width: 640px) {
     .form-grid { grid-template-columns: 1fr; }
     .fu-form { grid-template-columns: 1fr; }
     .todo-add { grid-template-columns: 1fr; }
+    .note-bar input { flex: none; width: 100%; }
     .view-nav { padding: 0 12px; }
     .container { padding: 14px 12px 50px; }
   }
@@ -392,7 +427,7 @@
 <div class="header">
   <div>
     <h1>⚡ Yian 客户建档</h1>
-    <div class="sub">我的客户资产库 · 每日待办 · 多设备云同步</div>
+    <div class="sub">我的客户资产库 · 每日待办 · 工作注意 · 多设备云同步</div>
   </div>
   <div class="header-actions">
     <button class="btn btn-white" onclick="openForm()">＋ 新建客户档案</button>
@@ -407,6 +442,7 @@
 <div class="view-nav">
   <button class="view-tab active" id="tabCustomers" onclick="switchView('customers')">🗂 客户档案</button>
   <button class="view-tab" id="tabTodos" onclick="switchView('todos')">✅ 每日待办<span class="badge" id="todoBadge" style="display:none;"></span></button>
+  <button class="view-tab" id="tabNotes" onclick="switchView('notes')">💡 工作注意</button>
 </div>
 
 <div id="viewCustomers">
@@ -454,6 +490,56 @@
       <button class="btn btn-red" onclick="addTodo()">＋ 添加</button>
     </div>
     <div id="todoList"></div>
+  </div>
+</div>
+
+<!-- 工作注意事项视图 -->
+<div id="viewNotes" style="display:none;">
+  <div class="container">
+    <div class="note-bar">
+      <input id="noteSearch" placeholder="🔍 搜索：标题 / 内容 / 分类…" oninput="renderNotes()">
+      <select id="noteCatFilter" onchange="renderNotes()"></select>
+      <button class="btn btn-red" onclick="openNoteForm()">＋ 记一条</button>
+    </div>
+    <div class="section-title">全部注意事项（<span id="noteCount">0</span>）</div>
+    <div id="noteList"></div>
+  </div>
+</div>
+
+<!-- 注意事项编辑弹窗 -->
+<div class="modal-mask" id="noteMask">
+  <div class="modal" style="max-width:600px;">
+    <div class="modal-head">
+      <h2 id="noteFormTitle">记一条注意事项</h2>
+      <button class="close-x" onclick="closeNoteForm()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-item">
+          <label>标题 <span class="req">*</span></label>
+          <input id="noteTitle" placeholder="一句话概括，如：巴西客户必问 INMETRO">
+        </div>
+        <div class="form-item">
+          <label>分类</label>
+          <select id="noteCat">
+            <option>产品与认证</option>
+            <option>报价与付款</option>
+            <option>单证物流</option>
+            <option>客户沟通</option>
+            <option>内部流程</option>
+            <option>其他</option>
+          </select>
+        </div>
+        <div class="form-item full">
+          <label>详细内容</label>
+          <textarea id="noteContent" rows="5" placeholder="展开写：背景、踩过的坑、正确做法…"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-gray" onclick="closeNoteForm()">取消</button>
+      <button class="btn btn-red" onclick="saveNote()">保存</button>
+    </div>
   </div>
 </div>
 
@@ -582,6 +668,7 @@ const LEGACY_KEY = "dc_customer_crm_v1";
 let companies = [];      // 就职公司板块：[{id, name, products:[]}]
 let customers = [];      // 客户档案，每条含 companyId 归属
 let todos = [];          // 每日待办：[{id, text, date, done, customerId, createdAt}]
+let notes = [];          // 工作注意事项：[{id, title, category, content, pinned, createdAt, updatedAt}]
 let activeCompanyId = null;
 let editingId = null;
 let detailId = null;
@@ -602,6 +689,7 @@ function load() {
         companies = data.companies && data.companies.length ? data.companies : defaultCompanies();
         customers = (data.customers || []).map(c => c.companyId ? c : { companyId: companies[0].id, ...c });
         todos = Array.isArray(data.todos) ? data.todos : [];
+        notes = Array.isArray(data.notes) ? data.notes : [];
         dataUpdatedAt = data.updatedAt || 0;
       }
     } else {
@@ -627,7 +715,7 @@ function save(bump = true) {
     scheduleSyncPush();                  // 自动排队上传云端（3 秒防抖）
   }
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ companies, customers, todos, updatedAt: dataUpdatedAt }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ companies, customers, todos, notes, updatedAt: dataUpdatedAt }));
   } catch (e) {
     toast("⚠️ 浏览器存储不可用（可能是无痕模式），数据没有被保存！");
   }
@@ -1040,8 +1128,8 @@ function exportExcel() {
 }
 
 function exportJSON() {
-  downloadFile(JSON.stringify({ companies, customers, todos }, null, 2), "Yian客户建档备份_" + todayStr() + ".json", "application/json");
-  toast("备份文件已下载（含全部公司板块 + 待办清单），请妥善保存");
+  downloadFile(JSON.stringify({ companies, customers, todos, notes }, null, 2), "Yian客户建档备份_" + todayStr() + ".json", "application/json");
+  toast("备份文件已下载（含公司板块 + 待办 + 注意事项），请妥善保存");
 }
 
 function importJSON(input) {
@@ -1051,7 +1139,7 @@ function importJSON(input) {
   reader.onload = e => {
     try {
       const data = JSON.parse(e.target.result);
-      let impCompanies, impCustomers, impTodos = [];
+      let impCompanies, impCustomers, impTodos = [], impNotes = [];
       if (Array.isArray(data)) { // 兼容旧版纯客户数组备份
         impCompanies = defaultCompanies();
         impCustomers = data.map(c => ({ companyId: "dc", ...c }));
@@ -1059,9 +1147,10 @@ function importJSON(input) {
         impCompanies = data.companies && data.companies.length ? data.companies : defaultCompanies();
         impCustomers = data.customers;
         impTodos = Array.isArray(data.todos) ? data.todos : [];
+        impNotes = Array.isArray(data.notes) ? data.notes : [];
       } else throw 0;
-      if (!confirm(`备份文件包含 ${impCompanies.length} 个公司板块、${impCustomers.length} 条客户档案、${impTodos.length} 条待办。\n\n确定覆盖当前数据吗？（建议先点「备份」导出当前数据）`)) { input.value = ""; return; }
-      companies = impCompanies; customers = impCustomers; todos = impTodos;
+      if (!confirm(`备份文件包含 ${impCompanies.length} 个公司板块、${impCustomers.length} 条客户档案、${impTodos.length} 条待办、${impNotes.length} 条注意事项。\n\n确定覆盖当前数据吗？（建议先点「备份」导出当前数据）`)) { input.value = ""; return; }
+      companies = impCompanies; customers = impCustomers; todos = impTodos; notes = impNotes;
       activeCompanyId = companies[0].id;
       save(); render();
       toast("导入成功：" + companies.length + " 个板块 / " + customers.length + " 条档案");
@@ -1113,7 +1202,7 @@ function gistContent(g) {
   return g && g.files && g.files[SYNC_FILE] ? (g.files[SYNC_FILE].content || null) : null;
 }
 function syncPayload() {
-  return { updatedAt: dataUpdatedAt, companies, customers, todos };
+  return { updatedAt: dataUpdatedAt, companies, customers, todos, notes };
 }
 
 /* 确保云端档案存在：优先找已建过的，找不到就新建 */
@@ -1145,7 +1234,7 @@ async function cloudPush(silent) {
   });
   lastSyncedRemote = dataUpdatedAt;
   localStorage.setItem(SYNC_LAST_KEY, String(lastSyncedRemote));
-  if (!silent) toast("☁️ 已上传云端（" + customers.length + " 条档案 / " + todos.length + " 条待办）");
+  if (!silent) toast("☁️ 已上传云端（" + customers.length + " 条档案 / " + todos.length + " 条待办 / " + notes.length + " 条注意）");
 }
 
 /* 用云端数据覆盖本机 */
@@ -1153,6 +1242,7 @@ async function cloudPullApply(remote) {
   companies = remote.companies && remote.companies.length ? remote.companies : defaultCompanies();
   customers = (remote.customers || []).map(c => c.companyId ? c : { companyId: companies[0].id, ...c });
   todos = Array.isArray(remote.todos) ? remote.todos : [];
+  notes = Array.isArray(remote.notes) ? remote.notes : [];
   if (!companies.find(co => co.id === activeCompanyId)) activeCompanyId = companies[0].id;
   suppressSync = true;
   dataUpdatedAt = remote.updatedAt || 0;
@@ -1162,7 +1252,8 @@ async function cloudPullApply(remote) {
   localStorage.setItem(SYNC_LAST_KEY, String(lastSyncedRemote));
   render();
   renderTodos();
-  toast("☁️ 已从云端拉取：" + customers.length + " 条档案 / " + todos.length + " 条待办");
+  renderNotes();
+  toast("☁️ 已从云端拉取：" + customers.length + " 条档案 / " + todos.length + " 条待办 / " + notes.length + " 条注意");
 }
 
 /* 手动/自动同步主入口 */
@@ -1315,12 +1406,14 @@ function disableSync() {
 let todoViewDate = todayStr();
 
 function switchView(v) {
-  const c = v === "customers";
-  document.getElementById("viewCustomers").style.display = c ? "block" : "none";
-  document.getElementById("viewTodos").style.display = c ? "none" : "block";
-  document.getElementById("tabCustomers").classList.toggle("active", c);
-  document.getElementById("tabTodos").classList.toggle("active", !c);
-  if (!c) { todoViewDate = todayStr(); renderTodos(); }
+  document.getElementById("viewCustomers").style.display = v === "customers" ? "block" : "none";
+  document.getElementById("viewTodos").style.display = v === "todos" ? "block" : "none";
+  document.getElementById("viewNotes").style.display = v === "notes" ? "block" : "none";
+  document.getElementById("tabCustomers").classList.toggle("active", v === "customers");
+  document.getElementById("tabTodos").classList.toggle("active", v === "todos");
+  document.getElementById("tabNotes").classList.toggle("active", v === "notes");
+  if (v === "todos") { todoViewDate = todayStr(); renderTodos(); }
+  if (v === "notes") renderNotes();
 }
 
 function todoShift(n) {
@@ -1422,6 +1515,88 @@ function carryTodo(id) {
   toast("已顺延到 " + todoViewDate);
 }
 
+/* ============ 工作注意事项 ============ */
+const NOTE_CATS = ["产品与认证", "报价与付款", "单证物流", "客户沟通", "内部流程", "其他"];
+let noteEditId = null;
+
+function renderNotes() {
+  const catSel = document.getElementById("noteCatFilter");
+  const curCat = catSel.value;
+  catSel.innerHTML = '<option value="">全部分类</option>' +
+    NOTE_CATS.map(c => `<option${c === curCat ? " selected" : ""}>${c}</option>`).join("");
+
+  const kw = document.getElementById("noteSearch").value.trim().toLowerCase();
+  const cat = catSel.value;
+  let list = notes.slice();
+  if (cat) list = list.filter(n => n.category === cat);
+  if (kw) list = list.filter(n => (n.title + " " + (n.content || "") + " " + (n.category || "")).toLowerCase().includes(kw));
+  list.sort((a, b) => (b.pinned - a.pinned) || String(b.updatedAt || b.createdAt || "").localeCompare(String(a.updatedAt || a.createdAt || "")));
+
+  document.getElementById("noteCount").textContent = list.length;
+  document.getElementById("noteList").innerHTML = list.length ? list.map(n => `
+    <div class="note-card${n.pinned ? " pinned" : ""}">
+      <div class="note-head">
+        <div style="flex:1;min-width:0;">
+          <span class="note-chip">${esc(n.category || "其他")}</span>
+          <div class="note-title">${n.pinned ? "📌 " : ""}${esc(n.title)}</div>
+        </div>
+        <div class="note-acts">
+          <button title="${n.pinned ? "取消置顶" : "置顶"}" class="${n.pinned ? "pin-on" : ""}" onclick="togglePinNote('${n.id}')">📌</button>
+          <button title="编辑" onclick="openNoteForm('${n.id}')">✏️</button>
+          <button title="删除" onclick="delNote('${n.id}')">🗑️</button>
+        </div>
+      </div>
+      ${n.content ? `<div class="note-content">${esc(n.content)}</div>` : ""}
+      <div class="note-meta">${n.createdAt || ""}${n.updatedAt && n.updatedAt !== n.createdAt ? " · 更新于 " + n.updatedAt : ""}</div>
+    </div>`).join("") :
+    '<div class="note-empty">还没有注意事项，点右上角「＋ 记一条」开始积累 💡</div>';
+}
+
+function openNoteForm(id) {
+  noteEditId = id || null;
+  const n = id ? notes.find(x => x.id === id) : null;
+  document.getElementById("noteFormTitle").textContent = n ? "编辑注意事项" : "记一条注意事项";
+  document.getElementById("noteTitle").value = n ? n.title : "";
+  document.getElementById("noteCat").value = n ? (n.category || "其他") : "其他";
+  document.getElementById("noteContent").value = n ? (n.content || "") : "";
+  document.getElementById("noteMask").classList.add("show");
+  document.getElementById("noteTitle").focus();
+}
+
+function closeNoteForm() {
+  document.getElementById("noteMask").classList.remove("show");
+}
+
+function saveNote() {
+  const title = document.getElementById("noteTitle").value.trim();
+  if (!title) { toast("请填写标题"); return; }
+  const category = document.getElementById("noteCat").value;
+  const content = document.getElementById("noteContent").value.trim();
+  if (noteEditId) {
+    const n = notes.find(x => x.id === noteEditId);
+    if (n) Object.assign(n, { title, category, content, updatedAt: todayStr() });
+    toast("✅ 注意事项已更新");
+  } else {
+    notes.push({ id: "n" + Date.now(), title, category, content, pinned: false, createdAt: todayStr(), updatedAt: todayStr() });
+    toast("✅ 已记下这条注意事项");
+  }
+  closeNoteForm(); save(); renderNotes();
+}
+
+function togglePinNote(id) {
+  const n = notes.find(x => x.id === id);
+  if (!n) return;
+  n.pinned = !n.pinned;
+  save(); renderNotes();
+}
+
+function delNote(id) {
+  const n = notes.find(x => x.id === id);
+  if (!n || !confirm(`确定删除「${n.title}」吗？`)) return;
+  notes = notes.filter(x => x.id !== id);
+  save(); renderNotes();
+}
+
 /* ============ 工具 ============ */
 function todayStr() {
   const d = new Date();
@@ -1440,7 +1615,7 @@ document.getElementById("formMask").addEventListener("click", e => { if (e.targe
 document.getElementById("detailMask").addEventListener("click", e => { if (e.target === e.currentTarget) closeDetail(); });
 document.getElementById("syncMask").addEventListener("click", e => { if (e.target === e.currentTarget) closeSyncModal(); });
 
-load(); render(); renderTodos();
+load(); render(); renderTodos(); renderNotes();
 lastSyncedRemote = Number(localStorage.getItem(SYNC_LAST_KEY) || 0);
 if (syncToken()) syncOnLoad(); else updateSyncBtn();
 </script>
