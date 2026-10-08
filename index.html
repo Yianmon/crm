@@ -310,6 +310,8 @@
   .tl-due-tag { font-size: 10.5px; color: #f39c12; margin-left: 6px; font-weight: 600; }
   .tl-status-tag { font-size: 10.5px; color: #fff; background: #f39c12; border-radius: 3px; padding: 0 5px; margin-left: 6px; font-weight: 600; vertical-align: 1px; }
   .tl-status-done { font-size: 10.5px; color: #1e8e3e; margin-left: 6px; font-weight: 600; }
+  .tl-status-future { font-size: 10.5px; color: #fff; background: #2563ab; border-radius: 3px; padding: 0 5px; margin-left: 6px; font-weight: 600; vertical-align: 1px; }
+  .tl-status-backfill { font-size: 10.5px; color: #777; background: #f0f0f0; border-radius: 3px; padding: 0 5px; margin-left: 6px; font-weight: 600; vertical-align: 1px; }
 
   .toast {
     position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
@@ -978,15 +980,21 @@ function openDetail(id) {
   const fus = (c.followUps || []).slice().sort((a, b) => b.date.localeCompare(a.date));
   const t = todayStr();
   const tl = fus.length ? fus.map((f, i) => {
-    const isDone = f.status === "done" || (f.date < t && f.status !== "pending");
-    const isTodayPending = !isDone && f.status === "pending" && f.date === t;
+    // 规则：只有用户主动点过「完成」才视为 done；其它一律按 pending 处理
+    // 历史补写(date<t) 和 今日跟进(date===t) 都允许点完成/后延；未来计划(date>t) 只展示，不操作
+    // 兼容旧数据：status 字段缺失时（历史 demo 数据）也按 pending 走
+    const isDone = f.status === "done";
+    const isFuturePlan = !isDone && f.date > t;
+    const isActionable = !isDone && !isFuturePlan && f.status !== "done";
     let tag = "";
     if (isDone) tag = `<span class="tl-status-done">✓ 已完成</span>`;
-    else if (isTodayPending) tag = `<span class="tl-status-tag">今日待跟进</span>`;
-    const acts = isTodayPending ?
+    else if (isFuturePlan) tag = `<span class="tl-status-future">📅 计划</span>`;
+    else if (f.date < t) tag = `<span class="tl-status-backfill">↩ 补录</span>`;
+    else tag = `<span class="tl-status-tag">今日待跟进</span>`;
+    const acts = isActionable ?
       `<div class="tl-acts">
          <button class="tl-btn ok" title="标记为已完成" onclick="completeFollow(${i})">✓ 完成</button>
-         <button class="tl-btn delay" title="顺延到明天" onclick="postponeFollow(${i})">⏰ 后延一天</button>
+         <button class="tl-btn delay" title="顺延到下一天" onclick="postponeFollow(${i})">⏰ 后延一天</button>
        </div>` : "";
     return `
     <div class="tl-item${isDone ? " done" : ""}">
@@ -1025,14 +1033,14 @@ function addFollow() {
   if (!date) { toast("请选择日期"); return; }
   if (!note) { toast("请填写跟进内容"); return; }
   c.followUps = c.followUps || [];
-  const t = todayStr();
-  let status;
-  if (date < t) status = "done";            // 补写历史记录，直接算完成
-  else if (date === t) status = "pending";  // 今日跟进，待完成
-  else status = "pending";                  // 未来计划，也算待办
-  c.followUps.push({ date, type, note, status });
+  // 所有新加的跟进统一进 pending，由用户主动点「✓ 完成」才转 done
+  // 这样：补写历史、今日跟进、未来计划 都允许在时间线上一键完成/后延
+  c.followUps.push({ date, type, note, status: "pending" });
   save(); openDetail(detailId); render();
-  toast(date === t ? "已添加今日跟进，完成后记得点「✓ 完成」" : (date < t ? "已补录历史跟进记录" : "已添加未来计划"));
+  const t = todayStr();
+  if (date < t)      toast("已补录历史跟进，完成后记得点「✓ 完成」");
+  else if (date === t) toast("已添加今日跟进，完成后记得点「✓ 完成」");
+  else               toast("已添加未来计划，到时候再点「✓ 完成」");
 }
 
 function completeFollow(i) {
