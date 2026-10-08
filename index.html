@@ -295,6 +295,21 @@
   .tl-note { font-size: 13.5px; color: #333; margin-top: 3px; white-space: pre-wrap; }
   .tl-del { position: absolute; right: 0; top: 2px; background: none; border: none; color: #ccc; cursor: pointer; font-size: 14px; }
   .tl-del:hover { color: #e74c3c; }
+  .tl-item.done { border-left-color: #c8e6d4; }
+  .tl-item.done::before { background: #1e8e3e; box-shadow: 0 0 0 2px #1e8e3e; }
+  .tl-item.done .tl-note { text-decoration: line-through; color: #aaa; }
+  .tl-acts { position: absolute; right: 22px; top: 1px; display: flex; gap: 4px; }
+  .tl-btn {
+    background: #fff; border: 1px solid #e0e0e0; color: #666;
+    border-radius: 4px; padding: 1px 8px; font-size: 11.5px;
+    cursor: pointer; font-family: inherit; transition: all .15s;
+  }
+  .tl-btn:hover { border-color: #2563ab; color: #2563ab; }
+  .tl-btn.ok:hover { border-color: #1e8e3e; color: #1e8e3e; }
+  .tl-btn.delay:hover { border-color: #f39c12; color: #f39c12; }
+  .tl-due-tag { font-size: 10.5px; color: #f39c12; margin-left: 6px; font-weight: 600; }
+  .tl-status-tag { font-size: 10.5px; color: #fff; background: #f39c12; border-radius: 3px; padding: 0 5px; margin-left: 6px; font-weight: 600; vertical-align: 1px; }
+  .tl-status-done { font-size: 10.5px; color: #1e8e3e; margin-left: 6px; font-weight: 600; }
 
   .toast {
     position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
@@ -669,6 +684,7 @@ let companies = [];      // 就职公司板块：[{id, name, products:[]}]
 let customers = [];      // 客户档案，每条含 companyId 归属
 let todos = [];          // 每日待办：[{id, text, date, done, customerId, createdAt}]
 let notes = [];          // 工作注意事项：[{id, title, category, content, pinned, createdAt, updatedAt}]
+let noteIdSeq = 0;       // 保证ID单调递增，避免同毫秒保存造成ID碰撞
 let activeCompanyId = null;
 let editingId = null;
 let detailId = null;
@@ -960,12 +976,26 @@ function openDetail(id) {
   ].map(([k, v]) => `<div class="k">${k}</div><div class="v">${v}</div>`).join("");
 
   const fus = (c.followUps || []).slice().sort((a, b) => b.date.localeCompare(a.date));
-  const tl = fus.length ? fus.map((f, i) => `
-    <div class="tl-item">
+  const t = todayStr();
+  const tl = fus.length ? fus.map((f, i) => {
+    const isDone = f.status === "done" || (f.date < t && f.status !== "pending");
+    const isTodayPending = !isDone && f.status === "pending" && f.date === t;
+    let tag = "";
+    if (isDone) tag = `<span class="tl-status-done">✓ 已完成</span>`;
+    else if (isTodayPending) tag = `<span class="tl-status-tag">今日待跟进</span>`;
+    const acts = isTodayPending ?
+      `<div class="tl-acts">
+         <button class="tl-btn ok" title="标记为已完成" onclick="completeFollow(${i})">✓ 完成</button>
+         <button class="tl-btn delay" title="顺延到明天" onclick="postponeFollow(${i})">⏰ 后延一天</button>
+       </div>` : "";
+    return `
+    <div class="tl-item${isDone ? " done" : ""}">
+      ${acts}
       <button class="tl-del" title="删除该条记录" onclick="delFollow(${i})">✕</button>
-      <span class="tl-date">${esc(f.date)}</span><span class="tl-type">${esc(f.type)}</span>
+      <span class="tl-date">${esc(f.date)}</span><span class="tl-type">${esc(f.type)}</span>${tag}
       <div class="tl-note">${esc(f.note || "")}</div>
-    </div>`).join("") : '<div style="color:#aaa;font-size:13px;padding:6px 0 2px;">还没有跟进记录</div>';
+    </div>`;
+  }).join("") : '<div style="color:#aaa;font-size:13px;padding:6px 0 2px;">还没有跟进记录</div>';
 
   document.getElementById("detailBody").innerHTML = `
     <div class="detail-info">${info}</div>
@@ -995,9 +1025,37 @@ function addFollow() {
   if (!date) { toast("请选择日期"); return; }
   if (!note) { toast("请填写跟进内容"); return; }
   c.followUps = c.followUps || [];
-  c.followUps.push({ date, type, note });
+  const t = todayStr();
+  let status;
+  if (date < t) status = "done";            // 补写历史记录，直接算完成
+  else if (date === t) status = "pending";  // 今日跟进，待完成
+  else status = "pending";                  // 未来计划，也算待办
+  c.followUps.push({ date, type, note, status });
   save(); openDetail(detailId); render();
-  toast("已添加跟进记录");
+  toast(date === t ? "已添加今日跟进，完成后记得点「✓ 完成」" : (date < t ? "已补录历史跟进记录" : "已添加未来计划"));
+}
+
+function completeFollow(i) {
+  const c = customers.find(x => x.id === detailId);
+  if (!c || !c.followUps || !c.followUps[i]) return;
+  const oldDate = c.followUps[i].date;
+  c.followUps[i].status = "done";
+  if (c.next === oldDate) c.next = "";
+  save(); openDetail(detailId); render();
+  toast("✅ 已完成这条跟进");
+}
+
+function postponeFollow(i) {
+  const c = customers.find(x => x.id === detailId);
+  if (!c || !c.followUps || !c.followUps[i]) return;
+  const oldDate = c.followUps[i].date;
+  const d = new Date(oldDate + "T00:00");
+  d.setDate(d.getDate() + 1);
+  const newDate = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  c.followUps[i].date = newDate;
+  if (c.next === oldDate) c.next = newDate;
+  save(); openDetail(detailId); render();
+  toast("⏰ 已顺延到 " + newDate.slice(5));
 }
 
 function delFollow(i) {
@@ -1577,7 +1635,7 @@ function saveNote() {
     if (n) Object.assign(n, { title, category, content, updatedAt: todayStr() });
     toast("✅ 注意事项已更新");
   } else {
-    notes.push({ id: "n" + Date.now(), title, category, content, pinned: false, createdAt: todayStr(), updatedAt: todayStr() });
+    notes.push({ id: "n" + (++noteIdSeq) + "_" + Date.now().toString(36), title, category, content, pinned: false, createdAt: todayStr(), updatedAt: todayStr() });
     toast("✅ 已记下这条注意事项");
   }
   closeNoteForm(); save(); renderNotes();
